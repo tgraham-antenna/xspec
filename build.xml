@@ -28,6 +28,76 @@ where:
   <property name="xspec.properties" location="${xspec.project.dir}/xspec.properties"/>
   <property file="${xspec.properties}"/>
 
+  <property environment="env"/>
+
+  <condition property="xspec.home" value="${env.XSPEC_HOME}">
+    <isset property="env.XSPEC_HOME" />
+  </condition>
+
+  <!-- set SAXON_CP (either it has been by the user, or set it from
+       SAXON_HOME) -->
+
+  <condition property="saxon.home" value="${env.SAXON_HOME}">
+    <isset property="env.SAXON_HOME" />
+  </condition>
+
+  <!-- Set this variable in your environment or here, if you don't set
+       SAXON_CP
+
+       SAXON_HOME=/path/to/saxon/dir
+  -->
+  <condition property="saxon.cp" value="${env.SAXON_CP}">
+    <isset property="env.SAXON_CP" />
+  </condition>
+
+  <fail message="SAXON_CP and SAXON_HOME both not set!">
+    <condition>
+      <not>
+	<or>
+	  <isset property="saxon.home" />
+	  <isset property="saxon.cp" />
+	</or>
+      </not>
+    </condition>
+  </fail>
+
+  <condition property="saxon.cp"
+	     value="${env.SAXON_HOME}/saxon9ee.jar">
+    <available file="${env.SAXON_HOME}/saxon9ee.jar" />
+  </condition>
+  <condition property="saxon.cp"
+	     value="${env.SAXON_HOME}/saxon9pe.jar">
+    <available file="${env.SAXON_HOME}/saxon9pe.jar" />
+  </condition>
+  <condition property="saxon.cp"
+	     value="${env.SAXON_HOME}/saxon9he.jar">
+    <available file="${env.SAXON_HOME}/saxon9he.jar" />
+  </condition>
+  <condition property="saxon.cp"
+	     value="${env.SAXON_HOME}/saxon9sa.jar">
+    <available file="${env.SAXON_HOME}/saxon9sa.jar" />
+  </condition>
+  <condition property="saxon.cp"
+	     value="${env.SAXON_HOME}/saxon9.jar">
+    <available file="${env.SAXON_HOME}/saxon9.jar" />
+  </condition>
+  <condition property="saxon.cp"
+	     value="${env.SAXON_HOME}/saxonb9-1-0-8.jar">
+    <available file="${env.SAXON_HOME}/saxonb9-1-0-8.jar" />
+  </condition>
+  <condition property="saxon.cp"
+	     value="${env.SAXON_HOME}/saxon8sa.jar">
+    <available file="${env.SAXON_HOME}/saxon8sa.jar" />
+  </condition>
+  <condition property="saxon.cp"
+	     value="${env.SAXON_HOME}/saxon8.jar">
+    <available file="${env.SAXON_HOME}/saxon8.jar" />
+  </condition>
+
+  <fail message="Saxon jar cannot be found in SAXON_HOME: ${saxon.home}"
+	unless="saxon.cp" />
+
+  <property name="saxon.cp" value="${env.SAXON_HOME}" />
   <!-- saxon.jar location depends on OS. -->
   <condition property="saxon.jar" value="${saxon.jar.windows}">
     <os family="windows" />
@@ -39,12 +109,17 @@ where:
     <os family="unix" />
   </condition>
 
-  <property name="saxon.home" location="/Library/Application Support/saxonb9" />
-  <property name="saxon.jar" location="${saxon.home}/saxon9.jar" />
+  <property name="saxon.home"
+	    location="/Library/Application Support/saxonb9" />
+  <property name="saxon.jar"
+	    location="${saxon.home}/saxon9.jar" />
 
-  <dirname property="xspec.base.dir" file="${xspec.xml}" />
-  <basename property="xspec.xml.base" file="${xspec.xml}" suffix=".xml" />
-  <basename property="xspec.base" file="${xspec.xml.base}" suffix=".xspec" />
+  <dirname property="xspec.base.dir"
+	   file="${xspec.xml}" />
+  <basename property="xspec.xml.base"
+	    file="${xspec.xml}" suffix=".xml" />
+  <basename property="xspec.base"
+	    file="${xspec.xml.base}" suffix=".xspec" />
 
   <property name="xspec.dir"
     value="${xspec.base.dir}/xspec" />
@@ -55,61 +130,61 @@ where:
     value="${xspec.dir}/${xspec.base}-result.xml" />
   <property name="xspec.result.html"
     value="${xspec.dir}/${xspec.base}-result.html" />
-  
-	<macrodef name="xspec"
-						description="Run XSpec tests">
-		<attribute name="xspec.xml" description="XSpec tests file" />
-		<sequential>
-			<local name="xspec.base.dir" />
-			<dirname property="xspec.base.dir" file="@{xspec.xml}" />
-			<local name="xspec.xml.base" />
-			<basename property="xspec.xml.base" file="@{xspec.xml}" suffix=".xml" />
-			<local name="xspec.base" />
-			<basename property="xspec.base" file="${xspec.xml.base}" suffix=".xspec" />
-			<antcall target="xspec.xspec" inheritall="false">
-				<param name="xspec.xml"
-							 location="@{xspec.xml}" />
-				<param name="xspec.base.dir"
-							 location="${xspec.base.dir}" />
-				<param name="xspec.dir"
-							 location="${xspec.base.dir}/xspec" />
-				<param name="xspec.base"
-							 value="${xspec.base}" />
-			</antcall>
-		</sequential>
-	</macrodef>
+
+  <macrodef name="xspec"
+	    description="Run XSpec tests">
+    <attribute name="xspec.xml" description="XSpec tests file" />
+    <sequential>
+      <local name="xspec.base.dir" />
+      <dirname property="xspec.base.dir" file="@{xspec.xml}" />
+      <local name="xspec.xml.base" />
+      <basename property="xspec.xml.base" file="@{xspec.xml}" suffix=".xml" />
+      <local name="xspec.base" />
+      <basename property="xspec.base" file="${xspec.xml.base}" suffix=".xspec" />
+      <antcall target="xspec.xspec" inheritall="false">
+	<param name="xspec.xml"
+	       location="@{xspec.xml}" />
+	<param name="xspec.base.dir"
+	       location="${xspec.base.dir}" />
+	<param name="xspec.dir"
+	       location="${xspec.base.dir}/xspec" />
+	<param name="xspec.base"
+	       value="${xspec.base}" />
+      </antcall>
+    </sequential>
+  </macrodef>
 
   <target name="xspec"
     description="Runs the XSpec unit tests in ${xspec.xml}">
-    <xslt in="${xspec.xml}" 
+    <xslt in="${xspec.xml}"
       out="${xspec.xsl}"
       style="${xspec.project.dir}/src/compiler/generate-xspec-tests.xsl"
       classpath="${saxon.jar}">
-			<factory name="net.sf.saxon.TransformerFactoryImpl" />
-		</xslt>
-		<!-- Can't specify initial template with <xslt> task so have to
-		     fall back to running Saxon as Java app. -->
-		<java classname="net.sf.saxon.Transform"
-					classpath="${saxon.jar}"
-					fork="true">
-			<arg value="-ext:on" />
-			<arg value="-s:${xspec.xml}" />
-			<arg value="-o:${xspec.result.xml}" />
-			<arg value="-xsl:${xspec.xsl}" />
-			<arg value="-it:{http://www.jenitennison.com/xslt/xspec}main" />
-		</java>
+      <factory name="net.sf.saxon.TransformerFactoryImpl" />
+    </xslt>
+    <!-- Can't specify initial template with <xslt> task so have to
+	 fall back to running Saxon as Java app. -->
+    <java classname="net.sf.saxon.Transform"
+	  classpath="${saxon.jar}"
+	  fork="true">
+      <arg value="-ext:on" />
+      <arg value="-s:${xspec.xml}" />
+      <arg value="-o:${xspec.result.xml}" />
+      <arg value="-xsl:${xspec.xsl}" />
+      <arg value="-it:{http://www.jenitennison.com/xslt/xspec}main" />
+    </java>
     <xslt in="${xspec.result.xml}"
       out="${xspec.result.html}"
       style="${xspec.project.dir}/src/reporter/format-xspec-report.xsl"
       classpath="${saxon.jar}">
-			<factory name="net.sf.saxon.TransformerFactoryImpl">
-				<attribute
-						name="http://saxon.sf.net/feature/allow-external-functions" 
-						value="true"/>
-			</factory>
-		</xslt>
+      <factory name="net.sf.saxon.TransformerFactoryImpl">
+	<attribute
+	    name="http://saxon.sf.net/feature/allow-external-functions"
+	    value="true"/>
+      </factory>
+    </xslt>
     <loadfile srcfile="${xspec.result.xml}"
-      property="xspec.result" />
+	      property="xspec.result" />
     <fail message="XSpec tests failed. See ${xspec.result.html} for a report">
       <condition>
         <contains string="${xspec.result}" substring='successful="false"' />
@@ -117,37 +192,36 @@ where:
     </fail>
   </target>
 
-	<target name="echoproperties">
-		<echoproperties />
-	</target>
+  <!-- Utility targets. -->
+
+  <target name="echoproperties">
+    <echoproperties />
+  </target>
 
 </project>
 
 
-<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-<!-- DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS COMMENT.             -->
-<!--                                                                       -->
-<!-- Copyright (c) 2008, 2010 Jeni Tennison                                -->
-<!--                                                                       -->
-<!-- The contents of this file are subject to the MIT License (see the URI -->
-<!-- http://www.opensource.org/licenses/mit-license.php for details).      -->
-<!--                                                                       -->
-<!-- Permission is hereby granted, free of charge, to any person obtaining -->
-<!-- a copy of this software and associated documentation files (the       -->
-<!-- "Software"), to deal in the Software without restriction, including   -->
-<!-- without limitation the rights to use, copy, modify, merge, publish,   -->
-<!-- distribute, sublicense, and/or sell copies of the Software, and to    -->
-<!-- permit persons to whom the Software is furnished to do so, subject to -->
-<!-- the following conditions:                                             -->
-<!--                                                                       -->
-<!-- The above copyright notice and this permission notice shall be        -->
-<!-- included in all copies or substantial portions of the Software.       -->
-<!--                                                                       -->
-<!-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       -->
-<!-- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF    -->
-<!-- MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.-->
-<!-- IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY  -->
-<!-- CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  -->
-<!-- TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     -->
-<!-- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                -->
-<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+<!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+- - --> <!-- DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS COMMENT.
+--> <!-- --> <!-- Copyright (c) 2008, 2010 Jeni Tennison --> <!-- -->
+<!-- The contents of this file are subject to the MIT License (see the
+URI --> <!-- http://www.opensource.org/licenses/mit-license.php for
+details).  --> <!-- --> <!-- Permission is hereby granted, free of
+charge, to any person obtaining --> <!-- a copy of this software and
+associated documentation files (the --> <!-- "Software"), to deal in
+the Software without restriction, including --> <!-- without
+limitation the rights to use, copy, modify, merge, publish, --> <!--
+distribute, sublicense, and/or sell copies of the Software, and to -->
+<!-- permit persons to whom the Software is furnished to do so,
+subject to --> <!-- the following conditions: --> <!-- --> <!-- The
+above copyright notice and this permission notice shall be --> <!--
+included in all copies or substantial portions of the Software.  -->
+<!-- --> <!-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+ANY KIND, --> <!-- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+THE WARRANTIES OF --> <!-- MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT.--> <!-- IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY --> <!-- CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, --> <!-- TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE --> <!--
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  --> <!-- - - -
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
